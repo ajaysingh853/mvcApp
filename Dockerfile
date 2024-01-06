@@ -1,22 +1,20 @@
-
-FROM mcr.microsoft.com/dotnet/sdk:7.0 as build
-
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 WORKDIR /app
+EXPOSE 80
+EXPOSE 443
 
-COPY *.csproj ./
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+WORKDIR /src
+COPY ["mvcApp.csproj", "."]
+RUN dotnet restore "./mvcApp.csproj"
+COPY . .
+WORKDIR "/src/."
+RUN dotnet build "mvcApp.csproj" -c Release -o /app/build
 
-RUN dotnet restore
+FROM build AS publish
+RUN dotnet publish "mvcApp.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-COPY . ./
-
-RUN dotnet publish -c Release -o publish
-
-FROM mcr.microsoft.com/dotnet/sdk:7.0 as final
-
+FROM base AS final
 WORKDIR /app
-
-COPY --from=build /app/publish .
-
-EXPOSE 8000
-
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "mvcApp.dll"]
