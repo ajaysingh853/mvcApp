@@ -5,20 +5,23 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 as build
 
-WORKDIR /app
+WORKDIR /src
 
 COPY *.csproj ./
 
 RUN dotnet restore
 
 COPY . ./
+WORKDIR "/src/."
+RUN dotnet build -c Release -o /app/build
 
-RUN dotnet publish -c Release -o publish
+FROM build AS publish
+RUN dotnet publish -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0 as final
+FROM build as final
 
 WORKDIR /app
 
-COPY --from=build /app/publish .
+COPY --from=publish /app/publish .
 
 ENTRYPOINT ["dotnet", "mvcApp.dll"]
