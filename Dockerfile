@@ -17,6 +17,6 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
-EXPOSE 80
+EXPOSE 8000
 
 ENTRYPOINT ["dotnet", "mvcApp.dll"]
